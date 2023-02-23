@@ -3,4 +3,4 @@ Heterogeneous trajectory forecasting is critical for intelligent transportation 
 
 ![image](https://github.com/JWFanggit/HRG_HSG_trajForecasting/edit/main/RISG.png)
 
-Because of the space limitation, we only provide the model code for nuScenes dataset training and testing. The results, datasets and other dataset evaluation code can be downloaded here. (https://pan.baidu.com/share/init?surl=RfNjeW0Rjj6R4N7beSTYrA)(Extraction code:9pab)
+Because of the space limitation, we only provide the model code for nuScenes dataset training and testing. The results, datasets and other dataset evaluation code can be downloaded [Here](https://pan.baidu.com/s/12wq34ur-YvgIp3r0F3FD4A?pwd=39hl)(Extraction code:39hl)
