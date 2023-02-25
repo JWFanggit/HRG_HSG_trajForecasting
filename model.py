@@ -12,24 +12,24 @@ from torch.nn.modules.module import Module
 import networkx as nx
 import torch.optim as optim
 
-def anorm(p1,p2):    #定义计算两点间距离的函数，可以用来计算两个节点间的相似度
+def anorm(p1,p2):    #compute the Euclidean Distance
     NORM = math.sqrt((p1[0]-p2[0])**2+ (p1[1]-p2[1])**2)
     if NORM ==0:
         return 0
     return 1/(NORM)
 
 
-def seq_to_graph(seq_,seq_rel,norm_lap_matr = True):   # 定义函数用于将序列转化为图形
+def seq_to_graph(seq_,seq_rel,norm_lap_matr = True):   # graph construction
     seq_ = seq_.squeeze()             
     seq_rel = seq_rel.squeee()
-    seq_len = seq_.shape[2]           # 序列长度是8或者12
-    max_nodes = seq_.shape[0]         # 结点数  物体个数
+    seq_len = seq_.shape[2]           # seq length
+    max_nodes = seq_.shape[0]         # graph nodes
     
-    V = np.zeros((seq_len,max_nodes,2))  # 8，3,2 或者12,3,2
+    V = np.zeros((seq_len,max_nodes,2))  # 8，3,2 or 12,3,2
     A = np.zeros((seq_len,max_nodes,max_nodes))
     for s in range(seq_len):
-        step_ = seq_[:,:,s]           # 依次取出每个时刻的多个点坐标
-        step_rel = seq_rel[:,:,s]     # 同上
+        step_ = seq_[:,:,s]           # 
+        step_rel = seq_rel[:,:,s]     # 
         for h in range(len(step_)): 
             V[s,h,:] = step_rel[h]
             A[s,h,h] = 1
@@ -37,29 +37,29 @@ def seq_to_graph(seq_,seq_rel,norm_lap_matr = True):   # 定义函数用于将�
                 l2_norm = anorm(step_rel[h],step_rel[k])
                 A[s,h,k] = l2_norm
                 A[s,k,h] = l2_norm
-        if norm_lap_matr:     # 通过参数norm_lap_matr，控制是否对图的拉普拉斯矩阵进行规范化处理
+        if norm_lap_matr:     # 
             G = nx.from_numpy_matrix(A[s,:,:])
             A[s,:,:] = nx.normalized_laplacian_matrix(G).toarray()
 
     return torch.from_numpy(V).type(torch.float),\
            torch.from_numpy(A).type(torch.float)
 
-class MLP(nn.Module):    # mlp多层感知器
-    def __init__(self,inputsize,commonsize):    # inputsize输入大小,commonsize输出大小
+class MLP(nn.Module):    # mlp
+    def __init__(self,inputsize,commonsize):    # inputsize,commonsize
         super(MLP,self).__init__()
-        self.linear=nn.Sequential(               # self.linear是一个序列，它包含5层
-                nn.Linear(inputsize,128),        # 第一层是一个线性层，将输入映射到128维的特征空间
-                nn.PReLU(),                      # 第二层是一个PReLU层，它使用激活函数将输入进行归一化
-                nn.Linear(128,64),               # 第三层是一个线性层，将128维特征映射到64维特征空间
-                nn.PReLU(),                      # 第四层是一个PReLU层，将64维特征映射到commonsize维特征空间
-                nn.Linear(64,commonsize),        # 最后一层是一个PReLU层，用于归一化输出
+        self.linear=nn.Sequential(               # self.linear，3 layers
+                nn.Linear(inputsize,128),        # 
+                nn.PReLU(),                      # 
+                nn.Linear(128,64),               # 
+                nn.PReLU(),                      # 
+                nn.Linear(64,commonsize),        # 
                 nn.PReLU()
                 )
     def forward(self,x):
         out=self.linear(x)
         return out 
 
-def angle_l(a):     #参数a包含多个坐标点的列表，函数用来计算最后两个坐标点之间的夹角
+def angle_l(a):     #compute the angle of agents
     x1= a[-1][0]-a[-2][0]
     y1= a[-1][1]-a[-2][1]
     if x1==0:
@@ -69,32 +69,32 @@ def angle_l(a):     #参数a包含多个坐标点的列表，函数用来计算�
     return angle1
 
 
-class node_o(nn.Module):    #计算节点特征
+class node_o(nn.Module):    #compute the MLP feature for agents
     def __init__(self):
         super(node_o,self).__init__()
 
 #        self.mlp1 = MLP(4,1)
         
-    def forward(self,a):      # a:节点位置坐标
+    def forward(self,a):      # a:location
         node=[]
         node_64=[]
         for q in range(1,a.shape[0]):
-            node_single=[]      # 每个节点的位置坐标
-            node_single_64=[]   # 每个节点的64维向量
+            node_single=[]      # location buffer
+            node_single_64=[]   # node dimension:64
             for qq in range(a[q].shape[0]):
                 for qqq in range(a[q].shape[0]):
-                    dis=np.sqrt((a[q][qq][0]-a[q][qqq][0])*(a[q][qq][0]-a[q][qqq][0])+(a[q][qq][1]-a[q][qqq][1])*(a[q][qq][1]-a[q][qqq][1]))    #dis：两个节点间的距离
+                    dis=np.sqrt((a[q][qq][0]-a[q][qqq][0])*(a[q][qq][0]-a[q][qqq][0])+(a[q][qq][1]-a[q][qqq][1])*(a[q][qq][1]-a[q][qqq][1]))    #dis：the distance of two agents
                     d1=np.sqrt((a[q][qq][0]-a[q-1][qq][0])*(a[q][qq][0]-a[q-1][qq][0])+(a[q][qq][1]-a[q-1][qq][1])*(a[q][qq][1]-a[q-1][qq][1]))
                     v1=d1/0.5
-                    d2=np.sqrt((a[q][qqq][0]-a[q-1][qqq][0])*(a[q][qqq][0]-a[q-1][qqq][0])+(a[q][qqq][1]-a[q-1][qqq][1])*(a[q][qqq][1]-a[q-1][qqq][1]))  #d1,d2表明当前节点和上一时刻节点的距离
-                    v2=d2/0.5                # V1,V2表明当前节点和上一时刻节点的速度
+                    d2=np.sqrt((a[q][qqq][0]-a[q-1][qqq][0])*(a[q][qqq][0]-a[q-1][qqq][0])+(a[q][qqq][1]-a[q-1][qqq][1])*(a[q][qqq][1]-a[q-1][qqq][1]))  #d1,d2 the distance of agents in t-1,t
+                    v2=d2/0.5                # V1,V2 velocity
                     angle1=angle_l([a[q-1][qq],a[q][qq]])
-                    angle2=angle_l([a[q-1][qqq],a[q][qqq]])     # angle1, angle2表明当前节点和上一时刻节点的角度
+                    angle2=angle_l([a[q-1][qqq],a[q][qqq]])     # angle1, angle2
 
-                    x_linju=[a[q][qq][0]]     # x_linju，y_linju：邻居的位置的序列
+                    x_linju=[a[q][qq][0]]     # x_linju，y_linju：neighorhood agents
                     y_linju=[a[q][qq][1]]
-                    v_linju=[v1]              # v_linju：邻居的速度的序列
-                    angle_linju=[angle1]      # v_linju：邻居的角度的序列
+                    v_linju=[v1]              # v_linju：velocity of neighorhood agents
+                    angle_linju=[angle1]      # v_linju：angle of neighorhood agents
                     if dis<=12:
                         x_linju.append(a[q][qqq][0])
                         y_linju.append(a[q][qqq][1])
@@ -106,7 +106,7 @@ class node_o(nn.Module):    #计算节点特征
                     mlp3=MLP(len(x_linju),1)
                     mlp4=MLP(len(x_linju),1)
                     mlp5=MLP(4,1)
-                    mlp6=MLP(4,64)           #1-6为多层感知器mlp,预测节点的运动轨迹
+                    mlp6=MLP(4,64)           #1-6 mlp,predict the agent trajectories
                    
                     x_mlp=mlp1(torch.Tensor(x_linju))
                     x_mlp=x_mlp.detach().numpy().astype(float)
@@ -116,8 +116,8 @@ class node_o(nn.Module):    #计算节点特征
                     v_mlp=v_mlp.detach().numpy().astype(float)
                     angle_mlp=mlp4(torch.Tensor(angle_linju))
                     angle_mlp=angle_mlp.detach().numpy().astype(float)
-                    sss=mlp5(torch.Tensor([x_mlp[0],y_mlp[0],v_mlp[0],angle_mlp[0]]))   #预测的节点位置
-                    sss_64=mlp6(torch.Tensor([x_mlp[0],y_mlp[0],v_mlp[0],angle_mlp[0]]))   #预测的节点位置64维向量
+                    sss=mlp5(torch.Tensor([x_mlp[0],y_mlp[0],v_mlp[0],angle_mlp[0]]))   #location of predicted agents
+                    sss_64=mlp6(torch.Tensor([x_mlp[0],y_mlp[0],v_mlp[0],angle_mlp[0]]))   #64-dimension of predicted agents
                     sss_64=sss_64.tolist()
                 node_single.append(sss)
                 node_single_64.append(sss_64)
@@ -126,38 +126,38 @@ class node_o(nn.Module):    #计算节点特征
 
         node_out=[node[0]]
         for jj in node:
-            node_out.append(jj)       #jj是循环变量，遍历node里的元素，每次循环jj指向列表中的下一个元素并将其添加到node_out列表中
-        node_out2=torch.tensor(node_out)    #node_out列表转化为张量，并命名为node_out2
+            node_out.append(jj)       #jj for traversing the nodes and save the last one to node_out
+        node_out2=torch.tensor(node_out)    #The node_out list is converted into a tensor and named node_out2
         #node_out1=np.array(node_out)
         #node_out1 = node_out1.astype(float)
         #node_out2=torch.from_numpy(node_out1).type(torch.float)
         node_out_64=[node_64[0]]
         for jj in node_64:
-            node_out_64.append(jj)        #遍历node_64里的元素并将其添加到node_out_64列表中
-        node_out2_64=torch.tensor(node_out_64)    #node_out_64列表转化为张量，并命名为node_out2_64
+            node_out_64.append(jj)        #Traverse the elements in node_64 and add them to the node_out_64 list
+        node_out2_64=torch.tensor(node_out_64)    #The ode_out_64 list is converted into a tensor and named node_out2_64
         return node_out2,node_out2_64
 
 
-class risk_interaction(nn.Module):      #风险交互模型：计算不同实体之间的风险值
+class risk_interaction(nn.Module):      #risk graph and scene graph
     def __init__(self):
         super(risk_interaction,self).__init__()
         self.node_o=node_o()
 #        self.mlp = MLP(2,1)
         self.mlp = MLP(4,1)
         
-    def forward(self,cluster,a,start,end,sa_out,se_out,pedestrian_index,vehicle_index,rider_index):    #计算风险交互：cluster节点簇；a位置信息；start和end节点簇的起始和终止位置；sa_out边特征；3个index表示汽车自行车行人不同实体的索引；
+    def forward(self,cluster,a,start,end,sa_out,se_out,pedestrian_index,vehicle_index,rider_index):    #Calculate risk interaction: cluster node cluster; a position information; start and end position of start and end node clusters; sa_out edge feature; 3 indexes represent the indexes of different entities of automobiles, bicycles and pedestrians；
 
         a=a.permute(2,0,1)
        
         clu=cluster[start:end]
-        scene_graph_a=torch.cat((a, sa_out[:,:,-2:]), 1)   #a位置信息和sa_out边特征拼接处理为scene_graph_a/e
+        scene_graph_a=torch.cat((a, sa_out[:,:,-2:]), 1)   #a position information and sa_out edge feature splicing process is scene_graph_a/e
         scene_graph_e=torch.zeros((scene_graph_a.shape[0],scene_graph_a.shape[1],scene_graph_a.shape[1]))
         for p in range(se_out.shape[0]):
             for pp in range(se_out.shape[1]):
                 for ppp in range(se_out.shape[1]):
                     scene_graph_e[p][pp][ppp]=se_out[p][pp][ppp]
 
-        ped_ii=[]   # 提取pedestrian_index和vehicle_index的索引并存储在ped_ii，veh_ii中
+        ped_ii=[]   # Extract indices of pedestrian_index and vehicle_index and store in ped_ii, veh_ii
         veh_ii=[]
         
         for ii,ind in enumerate(range(start,end)):
@@ -165,7 +165,7 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
                 ped_ii.append(ii)
             else:
                 veh_ii.append(ii)
-        node_ou,node_ou_64=self.node_o(a)   #采用node_0()和mlp(4,1)函数对a进行处理，得到node_ou,node_ou_64
+        node_ou,node_ou_64=self.node_o(a)   #Use node_0() and mlp(4,1) functions to process a to get node_ou, node_ou_64
         risk_inter=[]
         
         for k in range(1,a.shape[0]):
@@ -178,38 +178,9 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
                        scene_graph_e[k][kk][kk+ee]=scene_graph_e[k][kk][kk+ee]=1
                risk_inter1=np.zeros((a.shape[1],a.shape[1]))
                risk_inter1[a.shape[1]-1,a.shape[1]-1]=0
-
-#               for i in range(a.shape[1]):
-#                   for j in range(a.shape[1]):
-#                       if i==j:
-#                           risk_inter1[i,i]=0
-#                       else:
-#                           d1=np.sqrt((a[k][i][0]-a[k-1][i][0])*(a[k][i][0]-a[k-1][i][0])+(a[k][i][1]-a[k-1][i][1])*(a[k][i][1]-a[k-1][i][1]))
-#                           v1=d1/0.5
-#                           d2=np.sqrt((a[k][j][0]-a[k-1][j][0])*(a[k][j][0]-a[k-1][j][0])+(a[k][j][1]-a[k-1][j][1])*(a[k][j][1]-a[k-1][j][1]))
-#                           v2=d2/0.5
-#
-#                           angle1=angle_l([a[k-1][i],a[k][i]])
-#                           angle2=angle_l([a[k-1][j],a[k][j]])
-#                           dis=np.sqrt((a[k][j][0]-a[k][i][0])*(a[k][j][0]-a[k][i][0])+(a[k][j][1]-a[k][i][1])*(a[k][j][1]-a[k][i][1]))
-#                        #                                        print('dis',dis)
-#                           angle3=angle_l([a[k][i],a[k][j]])
-#                           if (angle1-np.pi/2)<angle3<(angle1+np.pi/2):
-#                               lij=1
-#                           else:
-#                               lij=0
-#                           vv=abs(v1*math.cos(abs(angle1-angle3))-v2*math.cos(abs(angle2-angle3)))
-#                           t=dis/vv
-#                           risk1=1/t
-#                        # bb=self.mlp(torch.Tensor([v1,v2,clu[i],clu[j]]))
-#                           bb=self.mlp(torch.Tensor([node_ou[k][i],node_ou[k][j],clu[i],clu[j]]))
-##                           risk=risk1*bb*lij
-#                           risk=risk1*bb
-#                        # risk=1/dis
-#                           risk_inter1[i,j]=risk
                
                for i in range(a.shape[1]):
-                   if i in ped_ii :
+                   if i in ped_ii :# for pedestrians
                        if (sa_out[k][kk][-2] - sa_out[k][kk][-4] / 2) < a[k][i][0] < (
                                sa_out[k][kk][-2] - sa_out[k][kk][-4] / 2) or (
                                sa_out[k][kk][-1] - sa_out[k][kk][-3] / 2) < a[k][i][1] < (
@@ -243,10 +214,10 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
 #                                       risk=bb*risk1
                                        risk = risk1 * bb * lij
                                        risk_inter1[i, j] = risk
-                       else:
+                       else: 
                            for j in range(len(ped_ii)):
                                if i == j:
-                                   risk_inter1[i, i] = 0
+                                   risk_inter1[i, i] = 0 # OSR
                                else:
                                    d1 = np.sqrt((a[k][i][0] - a[k - 1][i][0]) * (a[k][i][0] - a[k - 1][i][0]) + (
                                            a[k][i][1] - a[k - 1][i][1]) * (a[k][i][1] - a[k - 1][i][1]))
@@ -270,10 +241,10 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
             
                                    bb = self.mlp(torch.Tensor([node_ou[k][i], node_ou[k][j],clu[i],clu[j]]))
 #                                   risk=bb*risk1
-                                   risk = risk1 * bb * lij
+                                   risk = risk1 * bb * lij  # risk computation between agents
                                    risk_inter1[i, j] = risk
 
-                   elif i in veh_ii:
+                   elif i in veh_ii:  # for vehicles
                        if (sa_out[k][kk][-2] - sa_out[k][kk][-4] / 2) < a[k][i][0] < (
                                sa_out[k][kk][-2] - sa_out[k][kk][-4] / 2) or (
                                sa_out[k][kk][-1] - sa_out[k][kk][-3] / 2) < a[k][i][1] < (
@@ -281,7 +252,7 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
                            if sa_out[k][kk][4] == 1.0 or sa_out[k][kk][5] == 1.0 or sa_out[k][kk][6] == 1.0:
                                for j in range(a.shape[1]):
                                    if i == j:
-                                       risk_inter1[i, i] = 0
+                                       risk_inter1[i, i] = 0 # OSR
                                    else:
                                        d1 = np.sqrt((a[k][i][0] - a[k - 1][i][0]) * (a[k][i][0] - a[k - 1][i][0]) + (
                                                a[k][i][1] - a[k - 1][i][1]) * (a[k][i][1] - a[k - 1][i][1]))
@@ -305,12 +276,12 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
                                       
                                        bb = self.mlp(torch.Tensor([node_ou[k][i], node_ou[k][j],clu[i],clu[j]]))
 #                                       risk=bb*risk1
-                                       risk = risk1 * bb * lij
+                                       risk = risk1 * bb * lij # risk computation between agents
                                        risk_inter1[i, j] = risk
                        else:
                            for j in range(len(veh_ii)):
                                if i == j:
-                                   risk_inter1[i, i] = 0
+                                   risk_inter1[i, i] = 0 # OSR
                                else:
                                    d1 = np.sqrt((a[k][i][0] - a[k - 1][i][0]) * (a[k][i][0] - a[k - 1][i][0]) + (
                                            a[k][i][1] - a[k - 1][i][1]) * (a[k][i][1] - a[k - 1][i][1]))
@@ -329,12 +300,12 @@ class risk_interaction(nn.Module):      #风险交互模型：计算不同实体
                                        lij = 0
                                    vv = abs(v1 * math.cos(abs(angle1 - angle3)) - v2 * math.cos(abs(angle2 - angle3)))
                                    t = dis / vv
-                                   risk1 = 1 / t
+                                   risk1 = 1 / t #TTC
 #                                   bb = self.mlp(torch.Tensor([node_ou[k][i], node_ou[k][j]]))
                                    
                                    bb = self.mlp(torch.Tensor([node_ou[k][i], node_ou[k][j],clu[i],clu[j]]))
 #                                   risk=bb*risk1
-                                   risk = risk1 * bb * lij
+                                   risk = risk1 * bb * lij # risk computation between agents
                                    risk_inter1[i, j] = risk
 
            risk_inter.append(risk_inter1)
@@ -368,7 +339,7 @@ class ConvTemporalGraphical(nn.Module):
             dilation=(t_dilation, 1),
             bias=bias)
 
-    def forward(self, x, A):
+    def forward(self, x, A): 
         assert A.size(0) == self.kernel_size
         x = self.conv(x)
         n, kc, t, v = x.size()
@@ -394,7 +365,7 @@ class st_gcn(nn.Module):
         self.use_mdn = use_mdn
 
         self.gcn = ConvTemporalGraphical(in_channels, out_channels,
-                                         kernel_size[1])
+                                         kernel_size[1])# gcn, tcn
         
 
         self.tcn = nn.Sequential(
@@ -424,7 +395,7 @@ class st_gcn(nn.Module):
                 nn.BatchNorm2d(out_channels),
             )
         self.prelu = nn.PReLU()
-    def forward(self, x, A):
+    def forward(self, x, A): #stgcnn
         res = self.residual(x)
         x, A = self.gcn(x, A)
         x = self.tcn(x)+res 
@@ -482,10 +453,10 @@ class social_stgcnn(nn.Module):
         for k in range(self.n_stgcnn):
             v2,seg=self.st_gcns_seg[k](Sg_a_tmp,sg_e)
 
-        v1 = v1.view(v1.shape[0],v1.shape[2],v1.shape[1],v1.shape[3])  #torch.Size([1, 4时间, 5, 3])
-        v2 = v2.view(v2.shape[0],v2.shape[2],v2.shape[1],v2.shape[3])#torch.Size([1, 4时间, 5, 20])
+        v1 = v1.view(v1.shape[0],v1.shape[2],v1.shape[1],v1.shape[3])  #torch.Size([1, 4, 5, 3])# graph embedding of HRG
+        v2 = v2.view(v2.shape[0],v2.shape[2],v2.shape[1],v2.shape[3])#torch.Size([1, 4, 5, 20])# graph embedding of HSG
         #v2_emp = v2[:,:,:,:8]
-        conv_zc = nn.Conv2d(v2.shape[3],
+        conv_zc = nn.Conv2d(v2.shape[3],## convert the dimension of HSG embedding to be with the same dimension to HRG
              v1.shape[3],
              kernel_size=1,
              stride=(1,1),
