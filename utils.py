@@ -45,7 +45,7 @@ def poly_fit(traj, traj_len, threshold):
     Output:
     - int: 1 -> Non Linear 0-> Linear
     """
-    t = np.linspace(0, traj_len - 1, traj_len)   #np.linspace主要用来创建等差数列
+    t = np.linspace(0, traj_len - 1, traj_len)   #np.linspace is mainly used to create arithmetic progressions
     res_x = np.polyfit(t, traj[0, -traj_len:], 2, full=True)[1]
     res_y = np.polyfit(t, traj[1, -traj_len:], 2, full=True)[1]
     if res_x + res_y >= threshold:
@@ -126,12 +126,12 @@ def class_cluster(seq_traj_xytype_zc,type_):
 
     
     if type_=='train':
-        df = pd.read_csv(open(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\train_clu.csv'))
+        df = pd.read_csv(open(r'.\train_clu.csv'))
     if type_=='val':
-        df = pd.read_csv(open(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\val_clu.csv'))
+        df = pd.read_csv(open(r'D:.\val_clu.csv'))
     if type_=='test':
-        df = pd.read_csv(open(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\test_clu.csv'))
-    # df = pd.read_csv(open(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\test_clu.csv'))
+        df = pd.read_csv(open(r'.\test_clu.csv'))
+    # df = pd.read_csv(open(r'D:.\test_clu.csv'))
     class_clu=df['clu'].tolist()
 #    print('class_clu',class_clu)
 
@@ -178,11 +178,11 @@ def class_cluster(seq_traj_xytype_zc,type_):
 ##    c['index']=class_clu_index
 ##    print('c',c)
 #    if type_=='train':
-#        c.to_csv(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\train_clu.csv')
+#        c.to_csv(r'.\train_clu.csv')
 #    if type_=='val':
-#        c.to_csv(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\val_clu.csv')
+#        c.to_csv(r'.\val_clu.csv')
 #    if type_=='test':
-#        c.to_csv(r'D:\risg\risg程序\DALUNWEN - gai-2\clu\test_clu.csv')
+#        c.to_csv(r'.\test_clu.csv')
     return class_clu,pedestrian_index,vehicle_index,rider_index
                          
                          
@@ -266,7 +266,7 @@ def TrajectoryDataset(
         seq_list_xytype_zc=[]
         se22=[]
         sa22=[]
-        with open(r'D:\risg\risg程序\DALUNWEN - gai-2\datasets\segment\train\seg_ment_trainval_global.json', 'r',
+        with open(r'.\datasets\segment\train\seg_ment_trainval_global.json', 'r',
                   encoding='utf8')as fp:
             json_data = json.load(fp)
         
@@ -276,7 +276,7 @@ def TrajectoryDataset(
             frames=u[np.argsort(ind)].tolist()
             frame_data = []
             for frame in frames:
-                frame_data.append(data[frame == data[:, 0], :])     #len(frame_data)=697张图片
+                frame_data.append(data[frame == data[:, 0], :])     #len(frame_data)=697 images
             print('frame_data',len(frame_data))
             se1=[]
             sa1=[]
