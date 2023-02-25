@@ -172,7 +172,7 @@ def test(KSTEPS=20):
             fde_bigls.append(fde1)
         
         
-##########绘制预测轨迹图
+##########visualize the predicted trajectories
 #            pred_min1=pred[0]
 #            pred_min1_x=pred_min1[:,:,0].squeeze()
 #            pred_min1_y=pred_min1[:,:,1].squeeze()
@@ -189,7 +189,7 @@ def test(KSTEPS=20):
 #        name=str(ant)+'.png'
 #        plt.savefig('./figure/'+'nuscenes/'+name)
 #        ant+=1
-###########保存观测值以及真值
+###########save observation and groundtruth
 #        print('V_x_rel_to_abs',V_x_rel_to_abs.shape)
 #        print('V_y_rel_to_abs',V_y_rel_to_abs.shape)
 #        ground_truth=np.concatenate([V_x_rel_to_abs,V_y_rel_to_abs],axis=0).squeeze()
@@ -200,14 +200,14 @@ def test(KSTEPS=20):
 #        ground_truth_zc1=pd.DataFrame(ground_truth_zc.detach().numpy())
 #        name1=str(ss)+'.csv'
 #        ground_truth_zc1.to_csv('./ground_truth_zc/'+name1)
-###########保存20个examples点坐标
+###########save 20 times of prediction
 #        pred_zc=torch.tensor(pred_ls_all).permute(1,0,2,3)
 ##        print('pred_zc1',pred_zc.shape)###[4, 6, 20, 2]
 #        pred_zc=pred_zc.reshape(pred_zc.shape[0]*pred_zc.shape[1]*pred_zc.shape[2],pred_zc.shape[3])
 #        pred_zc1=pd.DataFrame(pred_zc.detach().numpy())
 #        name1=str(ss)+'.csv'
 #        pred_zc1.to_csv('./pred_all_2/'+name1)
-###########保存最终预测坐标
+###########save predicted trajectories with minimum ADE
 #        aaa=torch.tensor(aaa).permute(1,0,2)
 #        pred_shuchu=aaa.reshape(aaa.shape[0]*aaa.shape[1],aaa.shape[2])
 #        pred_shuchu=pd.DataFrame(pred_shuchu.detach().numpy())
@@ -226,7 +226,7 @@ def test(KSTEPS=20):
             fde_p.append(fde_bigls[qq])
     ade_ped = sum(ade_p)/len(ade_p)
     fde_ped = sum(fde_p)/len(ade_p)
-    mr_ped = sum(np.array(fde_p) > 2 ) / len(fde_p)   #2阈值，可更改
+    mr_ped = sum(np.array(fde_p) > 2 ) / len(fde_p)   #2 meters for miss rate
     print('len(ade_p)',len(ade_p))
 
     ade_v=[]
@@ -238,7 +238,7 @@ def test(KSTEPS=20):
             fde_v.append(fde_bigls[qq])
     ade_veh = sum(ade_v)/len(ade_v)
     fde_veh = sum(fde_v)/len(ade_v)
-    mr_veh = sum(np.array(fde_v)>2) / len(fde_v)   #2阈值，可更改
+    mr_veh = sum(np.array(fde_v)>2) / len(fde_v)  #2 meters for miss rate
     print('len(ade_v)',len(ade_v))
 
     ade_r=[]
@@ -254,7 +254,7 @@ def test(KSTEPS=20):
                 fde_r.append(fde_bigls[qq])
         ade_rider = sum(ade_r)/len(ade_r)
         fde_rider = sum(fde_r)/len(ade_r)
-        mr_rider = sum(np.array(fde_r)>2)/len(fde_r)  #2阈值
+        mr_rider = sum(np.array(fde_r)>2)/len(fde_r) #2 meters for miss rate
     print('len(ade_r)',len(ade_r))
 
     ade_ = (sum(ade_p)+sum(ade_v)+sum(ade_r))/(len(ade_p)+len(ade_v)+len(ade_r))
@@ -299,11 +299,11 @@ for feta in range(len(paths)):
         
 
         batch_test = TrajectoryDataset(
-        data_set+'test/',         #train，表示加载数据库的训练集
-        obs_len=obs_seq_len,       #default=8
-        pred_len=pred_seq_len,     #default=12
+        data_set+'test/',         #train，load testing dataset
+        obs_len=obs_seq_len,       
+        pred_len=pred_seq_len,     
         skip=1,norm_lap_matr=True,
-        type_='test')   #norm(v) 返回v的二范数   lap 拉普拉斯  matrix 
+        type_='test')   #norm(v)    lap: Laplace  matrix 
         
         #Defining the model 
         model = social_stgcnn(n_stgcnn =args.n_stgcnn,n_txpcnn=args.n_txpcnn,
