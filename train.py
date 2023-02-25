@@ -44,8 +44,8 @@ parser.add_argument('--n_txpcnn', type=int, default=5, help='Number of TXPCNN la
 parser.add_argument('--kernel_size', type=int, default=3)
 
 #Data specifc paremeters
-parser.add_argument('--obs_seq_len', type=int, default=4)  # 观察2秒4帧，一秒两帧
-parser.add_argument('--pred_seq_len', type=int, default=12)  # 预测3秒6帧
+parser.add_argument('--obs_seq_len', type=int, default=4)  # observation
+parser.add_argument('--pred_seq_len', type=int, default=12)  # prediction
 parser.add_argument('--dataset', default='eth',help='eth,hotel,univ,zara1,zara2')
                     #help='eth,hotel,univ,zara1,zara2')    
 
@@ -81,20 +81,20 @@ data_set_train= './datasets/eth/'
 
 
 batch_train = TrajectoryDataset(
-        data_set+'train/',         #train，表示加载数据库的训练集
+        data_set+'train/',         #train，load training dataset
         obs_len=obs_seq_len,       #default=8
         pred_len=pred_seq_len,     #default=12
         skip=1,norm_lap_matr=True,
-        type_='train')   #norm(v) 返回v的二范数   lap 拉普拉斯  matrix 
+        type_='train')   #norm(v)    lap:Laplace matrix 
 
 
 
 batch_val = TrajectoryDataset(
-        data_set+'val/',         #train，表示加载数据库的训练集
+        data_set+'val/',         #train，load validation dataset
         obs_len=obs_seq_len,       #default=8
         pred_len=pred_seq_len,     #default=12
         skip=1,norm_lap_matr=True,
-        type_='val')   #norm(v) 返回v的二范数   lap 拉普拉斯  matrix 
+        type_='val')   #norm(v)   lap:Laplace matrix 
 
 
 
