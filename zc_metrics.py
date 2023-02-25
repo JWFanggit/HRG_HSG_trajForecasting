@@ -18,24 +18,24 @@ from numpy import linalg as LA
 import networkx as nx
 
 
-# def ade(predAll,targetAll,count_):   (房老师修改1)
-#     All = len(predAll)
-#     sum_all = 0
-#     maxade = []
-#     tmpde = 0
-#     for s in range(All):
-#         pred = np.swapaxes(predAll[s][:,:count_[s],:],0,1)
-#         target = np.swapaxes(targetAll[s][:,:count_[s],:],0,1)
-#         N = pred.shape[0]
-#         T = pred.shape[1]
-#         sum_ = 0
-#         for i in range(N):
-#             for t in range(T):
-#                 tmpde = math.sqrt((pred[i,t,0] - target[i,t,0])**2+(pred[i,t,1] - target[i,t,1])**2)
-#         sum_ = tmpde
-#         sum_all += sum_/(N*T)
-#         maxade = maxade.append(tmpde)
-#     return sum_all/All,max(maxade)
+ def ade(predAll,targetAll,count_):   
+     All = len(predAll)
+     sum_all = 0
+     maxade = []
+     tmpde = 0
+     for s in range(All):
+         pred = np.swapaxes(predAll[s][:,:count_[s],:],0,1)
+         target = np.swapaxes(targetAll[s][:,:count_[s],:],0,1)
+         N = pred.shape[0]
+         T = pred.shape[1]
+         sum_ = 0
+         for i in range(N):
+             for t in range(T):
+                 tmpde = math.sqrt((pred[i,t,0] - target[i,t,0])**2+(pred[i,t,1] - target[i,t,1])**2)
+         sum_ = tmpde
+         sum_all += sum_/(N*T)
+         maxade = maxade.append(tmpde)
+     return sum_all/All,max(maxade)
 
 def minade_index(predAll, targetAll, count_):
     All = len(predAll)
@@ -119,11 +119,11 @@ def fde_frame(predAll,targetAll,count_):
         sum_all += sum_/(N)
     return sum_all/All
 
-def seq_to_nodes(seq_,max_nodes = 88):   #将输入的序列转换为节点，参数max_nodes表示最大节点数，默认值为88
+def seq_to_nodes(seq_,max_nodes = 88):   #Convert the input sequence to nodes, the parameter max_nodes indicates the maximum number of nodes, the default value is 88
     seq_ = seq_.squeeze()
     seq_len = seq_.shape[2]
     
-    V = np.zeros((seq_len,max_nodes,2))    #通过将序列中的每个步骤映射到最大节点数，然后将节点保存在V中
+    V = np.zeros((seq_len,max_nodes,2))    #By mapping each step in the sequence to the maximum number of nodes, and then saving the nodes in V
     for s in range(seq_len):
         step_ = seq_[:,:,s]
         for h in range(len(step_)): 
@@ -131,11 +131,11 @@ def seq_to_nodes(seq_,max_nodes = 88):   #将输入的序列转换为节点，�
     return V.squeeze()
 
 
-def nodes_rel_to_nodes_abs_frame(nodes,init_node):  #将相对节点转换为绝对节点，nodes表示要转换的相对节点，init_node表示初始节点
+def nodes_rel_to_nodes_abs_frame(nodes,init_node):  #Convert relative nodes to absolute nodes, nodes indicates the relative nodes to be converted, and init_node indicates the initial node
     nodes_ = np.zeros_like(nodes)
 
     for ped in range(nodes.shape[0]):
-        nodes_[ped,:] = nodes[ped][:] + init_node[ped][:]     #将相对节点与初始节点相加，以获得绝对节点，并将其保存在nodes_[ped,:]中
+        nodes_[ped,:] = nodes[ped][:] + init_node[ped][:]     #Add relative nodes to initial nodes to get absolute nodes and save them in nodes_[ped,:]
     
     return nodes_.squeeze()
 
@@ -166,13 +166,13 @@ def closer_to_zero(current,new_v):
     else: 
         return False
         
-def bivariate_loss(V_pred,V_trgt):      #计算V_pred预测值,V_trgt目标值的双变量损失
-    normx = V_trgt[:,:,0]- V_pred[:,:,0]   #normx,normy表示目标值和预测值之间的偏差
+def bivariate_loss(V_pred,V_trgt):      #Calculate the bivariate loss of V_pred predicted value, V_trgt target value
+    normx = V_trgt[:,:,0]- V_pred[:,:,0]   #Normx, normy represent the deviation between the target value and the predicted value
     normy = V_trgt[:,:,1]- V_pred[:,:,1]
 
-    sx = torch.exp(V_pred[:,:,2]) #sx，sy表示标准差
+    sx = torch.exp(V_pred[:,:,2]) #sx，sy
     sy = torch.exp(V_pred[:,:,3])
-    corr = torch.tanh(V_pred[:,:,4]) #corr：相关系数
+    corr = torch.tanh(V_pred[:,:,4]) #corr
 
     sxsy = sx * sy
 
