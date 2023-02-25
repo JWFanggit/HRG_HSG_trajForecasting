@@ -211,23 +211,6 @@ def test(KSTEPS=20):
             ade_bigls.append(ade1)
             fde1 = fde(pred, target, number_of)
             fde_bigls.append(fde1)
-            # filename_gt = r'D:\risg\risg程序\DALUNWEN - gai-2\6s_gt'
-            # 6s -3s
-            # filename_gt_ss = filename_gt +'\\'+str(ss) + '.xlsx'
-            # gt_traj_ss = pd.DataFrame(gt_traj_objs)
-            # gt_traj_ss.to_excel(filename_gt_ss, index=False)
-
-            # filename_pred_objs = r'D:\risg\risg程序\DALUNWEN - gai-2\6s_hrg_obs'
-            # # hrg - dot - res
-            # filename_pred_ss = filename_pred_objs +'\\'+ str(ss) + '.xlsx'
-            # pred_traj_ss = pd.DataFrame(pre_traj_objs)
-            # pred_traj_ss.to_excel(filename_pred_ss, index=False)
-            #
-            # filename_pred_objs_set = r'D:\risg\risg程序\DALUNWEN - gai-2\6s_hrg_obs_set'
-            # # hrg - dot - res
-            # filename_pred_set_ss = filename_pred_objs_set +'\\'+ str(ss) + '.xlsx'
-            # pred_traj_set_ss = pd.DataFrame(pre_traj_objs_set)
-            # pred_traj_set_ss.to_excel(filename_pred_set_ss, index=False)
      
 
     zuizhong_index=pedestrian_index+vehicle_index+rider_index
@@ -242,7 +225,7 @@ def test(KSTEPS=20):
             fde_p.append(fde_bigls[qq])
     ade_ped = sum(ade_p)/len(ade_p)
     fde_ped = sum(fde_p)/len(ade_p)
-    mr_ped = sum(np.array(fde_p) > 2) / len(fde_p)   #2阈值，可更改
+    mr_ped = sum(np.array(fde_p) > 2) / len(fde_p)   #2 meters for miss rate
     print('len(ade_p)',len(ade_p))
 
     ade_v=[]
@@ -254,7 +237,7 @@ def test(KSTEPS=20):
             fde_v.append(fde_bigls[qq])
     ade_veh = sum(ade_v)/len(ade_v)
     fde_veh = sum(fde_v)/len(ade_v)
-    mr_veh = sum(np.array(fde_v)>2) / len(fde_v)   #2阈值，可更改
+    mr_veh = sum(np.array(fde_v)>2) / len(fde_v)   #2 meters for miss rate
     print('len(ade_v)',len(ade_v))
 
     ade_r=[]
@@ -270,7 +253,7 @@ def test(KSTEPS=20):
                 fde_r.append(fde_bigls[qq])
         ade_rider = sum(ade_r)/len(ade_r)
         fde_rider = sum(fde_r)/len(ade_r)
-        mr_rider = sum(np.array(fde_r)>2)/len(fde_r)  #2阈值值
+        mr_rider = sum(np.array(fde_r)>2)/len(fde_r)  #2 meters for miss rate
     print('len(ade_r)',len(ade_r))
 
 
@@ -315,11 +298,11 @@ for feta in range(len(paths)):
         
 
         batch_test = TrajectoryDataset(
-        data_set+'test/',         #train，表示加载数据库的训练集
-        obs_len=obs_seq_len,       #default=8
-        pred_len=pred_seq_len,     #default=12
+        data_set+'test/',         #train，load testing datasets
+        obs_len=obs_seq_len,       
+        pred_len=pred_seq_len,     
         skip=1,norm_lap_matr=True,
-        type_='test')   #norm(v) 返回v的二范数   lap 拉普拉斯  matrix 
+        type_='test')   #norm(v)   lap  matrix 
         
         #Defining the model 
         model = social_stgcnn(n_stgcnn =args.n_stgcnn,n_txpcnn=args.n_txpcnn,
