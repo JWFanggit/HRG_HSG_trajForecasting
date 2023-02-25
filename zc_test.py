@@ -183,7 +183,7 @@ def test(KSTEPS=20):
 #            obsrvs_min1_x=obsrvs_min1[:,:,0].squeeze()
 #            obsrvs_min1_y=obsrvs_min1[:,:,1].squeeze()
 #
-#            ax.plot(pred_min1_x, pred_min1_y, 'g--', lw=4.0, label="pred")  #画线
+#            ax.plot(pred_min1_x, pred_min1_y, 'g--', lw=4.0, label="pred")  
 #            ax.plot(target_min1_x, target_min1_y, 'r--', lw=4.0, label="target")
 #            ax.plot(obsrvs_min1_x, obsrvs_min1_y, 'b', lw=4.0, label="obsrvs")
 #        name=str(ant)+'.png'
